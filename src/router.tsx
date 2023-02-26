@@ -1,6 +1,14 @@
-import { useMutation } from '@tanstack/react-query'
-import { Outlet, Link, Router, Route, RootRoute } from '@tanstack/react-router'
-import { authPb, pb } from './api'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import {
+  Outlet,
+  Link,
+  Router,
+  Route,
+  RootRoute,
+  Navigate,
+  useRouter,
+} from '@tanstack/react-router'
+import { authPb, isLoggedIn, logoutPb, pb } from './api'
 
 // Create a root route
 const rootRoute = new RootRoute({
@@ -26,24 +34,26 @@ const protectedRoute = new Route({
   path: 'posts',
   component: AuthenticatedLayout,
 })
-function AuthenticatedLayout() {
-  return (
-    <>
-      <h3>You are logged in!</h3>
-      <button
-        onClick={() => {
-          console.log(pb.authStore.isValid)
-          console.log(pb.authStore.token)
-          console.log(pb.authStore.model?.id)
 
-          // pb.authStore.clear()
-        }}
-      >
-        Show status
-      </button>
-      <Outlet />
-    </>
-  )
+function AuthenticatedLayout() {
+  const logout = useMutation({ mutationFn: logoutPb })
+
+  if (isLoggedIn()) {
+    return (
+      <>
+        <h3>You are logged in!</h3>
+        <button onClick={() => logout.mutate()}>Logout</button>
+        <Outlet />
+      </>
+    )
+  } else {
+    return (
+      <>
+        <h3>You're not logged in!</h3>
+        <Link to='/auth' />
+      </>
+    )
+  }
 }
 // Create an index route
 const indexRoute = new Route({
@@ -65,11 +75,14 @@ const authRoute = new Route({
 })
 
 export function Auth() {
-  const mutation = useMutation({
-    mutationFn: authPb,
-  })
+  const loginMutation = useMutation({ mutationFn: authPb })
+  const logoutMutation = useMutation({ mutationFn: logoutPb })
 
-  return <button onClick={() => mutation.mutate()}>Login</button>
+  if (isLoggedIn()) {
+    return <button onClick={() => logoutMutation.mutate()}>logout</button>
+  } else {
+    return <button onClick={() => loginMutation.mutate()}>Login</button>
+  }
 }
 
 const aRoute = new Route({
