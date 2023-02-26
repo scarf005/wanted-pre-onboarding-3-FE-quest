@@ -1,4 +1,6 @@
+import { useMutation } from '@tanstack/react-query'
 import { Outlet, Link, Router, Route, RootRoute } from '@tanstack/react-router'
+import { authPb, pb } from './api'
 
 // Create a root route
 const rootRoute = new RootRoute({
@@ -28,6 +30,17 @@ function AuthenticatedLayout() {
   return (
     <>
       <h3>You are logged in!</h3>
+      <button
+        onClick={() => {
+          console.log(pb.authStore.isValid)
+          console.log(pb.authStore.token)
+          console.log(pb.authStore.model?.id)
+
+          // pb.authStore.clear()
+        }}
+      >
+        Show status
+      </button>
       <Outlet />
     </>
   )
@@ -50,20 +63,15 @@ const authRoute = new Route({
   path: '/auth',
   component: Auth,
 })
-function Auth() {
-  return (
-    <>
-      <h3>Login</h3>
-      <form>
-        <label>Username</label>
-        <input type='text' />
-        <label>Password</label>
-        <input type='password' />
-        <button type='submit'>Login</button>
-      </form>
-    </>
-  )
+
+export function Auth() {
+  const mutation = useMutation({
+    mutationFn: authPb,
+  })
+
+  return <button onClick={() => mutation.mutate()}>Login</button>
 }
+
 const aRoute = new Route({
   getParentRoute: () => protectedRoute,
   path: '/a',
